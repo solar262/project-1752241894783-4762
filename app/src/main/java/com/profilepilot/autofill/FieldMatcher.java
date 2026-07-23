@@ -69,6 +69,18 @@ public final class FieldMatcher {
         return null;
     }
 
+    public static boolean isSubmissionAction(String descriptor) {
+        String normalized = normalize(descriptor);
+        String[] actions = {
+                "submit proposal", "submit application", "send proposal", "send application",
+                "place bid", "submit bid", "apply now", "send offer", "publish application"
+        };
+        for (String action : actions) {
+            if (normalized.equals(action) || normalized.contains(action)) return true;
+        }
+        return false;
+    }
+
     public static String detectPlatform(String packageName, String domain, String selected) {
         String haystack = normalize((packageName == null ? "" : packageName) + " " + (domain == null ? "" : domain));
         if (haystack.contains("freelancer")) return "Freelancer";
