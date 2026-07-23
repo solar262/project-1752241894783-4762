@@ -14,6 +14,12 @@ public class FieldMatcherTest {
         assertEquals(FieldMatcher.FieldKey.PORTFOLIO_DESCRIPTION, FieldMatcher.match("Project description"));
     }
 
+    @Test public void recognisesApplicationFields() {
+        assertEquals(FieldMatcher.FieldKey.PROPOSAL, FieldMatcher.match("Describe your proposal"));
+        assertEquals(FieldMatcher.FieldKey.BID_AMOUNT, FieldMatcher.match("Your bid amount"));
+        assertEquals(FieldMatcher.FieldKey.DELIVERY_DAYS, FieldMatcher.match("Days to deliver"));
+    }
+
     @Test public void blocksSensitiveFields() {
         assertTrue(FieldMatcher.isSensitive("Credit card number"));
         assertTrue(FieldMatcher.isSensitive("One time verification code"));
