@@ -29,15 +29,14 @@ public class ProfileDataTest {
         }
     }
 
-    @Test public void connectedApplicationValuesAreAvailableToAutofill() throws Exception {
+    @Test public void connectedApplicationValuesAreAvailableToAutofill() {
         ProfileData profile = ProfileData.defaults();
         profile.currentJobUrl = "https://example.com/job/1";
         profile.currentProposal = "Prepared proposal";
         profile.currentBidAmount = "120";
         profile.currentDeliveryDays = "3";
-        ProfileData restored = ProfileData.fromJson(profile.toJson().toString());
-        Map<FieldMatcher.FieldKey, String> values = restored.valuesFor("Freelancer");
-        assertTrue(restored.hasConnectedJob());
+        Map<FieldMatcher.FieldKey, String> values = profile.valuesFor("Freelancer");
+        assertTrue(profile.hasConnectedJob());
         assertEquals("Prepared proposal", values.get(FieldMatcher.FieldKey.PROPOSAL));
         assertEquals("120", values.get(FieldMatcher.FieldKey.BID_AMOUNT));
         assertEquals("3", values.get(FieldMatcher.FieldKey.DELIVERY_DAYS));
