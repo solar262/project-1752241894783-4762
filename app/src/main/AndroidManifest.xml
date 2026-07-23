@@ -10,7 +10,7 @@
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".SynchronizedMainActivity"
             android:exported="true"
             android:launchMode="singleTop">
             <intent-filter>
@@ -38,9 +38,9 @@
         </service>
 
         <service
-            android:name=".ProfileAccessibilityService"
+            android:name=".SynchronizedAccessibilityService"
             android:exported="true"
-            android:label="ProfilePilot one-time fallback"
+            android:label="ProfilePilot synchronized application helper"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
