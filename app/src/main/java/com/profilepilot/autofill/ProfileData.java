@@ -17,6 +17,14 @@ public final class ProfileData {
     public String achievements;
     public String preferredClients;
     public String selectedPlatform;
+    public String currentJobTitle;
+    public String currentJobUrl;
+    public String currentProposal;
+    public String currentBidAmount;
+    public String currentCurrency;
+    public String currentDeliveryDays;
+    public String currentClientNeed;
+    public String currentHandoffId;
 
     public static ProfileData defaults() {
         ProfileData p = new ProfileData();
@@ -30,6 +38,14 @@ public final class ProfileData {
         p.achievements = "Built and launched multiple AI-assisted web apps, ecommerce projects and digital workflows. Created business research systems, professional reports, presentations, product pages, buyer guides, spreadsheets and structured content for real projects. Published books under the name Mark Bishop and developed digital products from idea through testing and launch.";
         p.preferredClients = "Small businesses, founders, consultants, creators, ecommerce brands and agencies needing clear research, professional content, digital documents or practical workflow support.";
         p.selectedPlatform = "Freelancer";
+        p.currentJobTitle = "";
+        p.currentJobUrl = "";
+        p.currentProposal = "";
+        p.currentBidAmount = "";
+        p.currentCurrency = "";
+        p.currentDeliveryDays = "";
+        p.currentClientNeed = "";
+        p.currentHandoffId = "";
         return p;
     }
 
@@ -50,7 +66,14 @@ public final class ProfileData {
         values.put(FieldMatcher.FieldKey.SERVICE_DESCRIPTION, serviceDescription(target));
         values.put(FieldMatcher.FieldKey.PORTFOLIO_TITLE, "AI-Assisted Business Content and Document Portfolio");
         values.put(FieldMatcher.FieldKey.PORTFOLIO_DESCRIPTION, "A collection of professional research, presentations, spreadsheets, website content, product copy and workflow documents created for real digital projects. Each deliverable is structured for clarity, practical use and easy handover.");
+        values.put(FieldMatcher.FieldKey.PROPOSAL, currentProposal);
+        values.put(FieldMatcher.FieldKey.BID_AMOUNT, currentBidAmount);
+        values.put(FieldMatcher.FieldKey.DELIVERY_DAYS, currentDeliveryDays);
         return values;
+    }
+
+    public boolean hasConnectedJob() {
+        return currentJobUrl != null && !currentJobUrl.trim().isEmpty() && currentProposal != null && !currentProposal.trim().isEmpty();
     }
 
     private String headline(String platform) {
@@ -83,6 +106,10 @@ public final class ProfileData {
         j.put("experience", experience); j.put("skills", skills); j.put("tools", tools);
         j.put("languages", languages); j.put("achievements", achievements);
         j.put("preferredClients", preferredClients); j.put("selectedPlatform", selectedPlatform);
+        j.put("currentJobTitle", currentJobTitle); j.put("currentJobUrl", currentJobUrl);
+        j.put("currentProposal", currentProposal); j.put("currentBidAmount", currentBidAmount);
+        j.put("currentCurrency", currentCurrency); j.put("currentDeliveryDays", currentDeliveryDays);
+        j.put("currentClientNeed", currentClientNeed); j.put("currentHandoffId", currentHandoffId);
         return j;
     }
 
@@ -99,6 +126,14 @@ public final class ProfileData {
         d.achievements = j.optString("achievements", d.achievements);
         d.preferredClients = j.optString("preferredClients", d.preferredClients);
         d.selectedPlatform = j.optString("selectedPlatform", d.selectedPlatform);
+        d.currentJobTitle = j.optString("currentJobTitle", d.currentJobTitle);
+        d.currentJobUrl = j.optString("currentJobUrl", d.currentJobUrl);
+        d.currentProposal = j.optString("currentProposal", d.currentProposal);
+        d.currentBidAmount = j.optString("currentBidAmount", d.currentBidAmount);
+        d.currentCurrency = j.optString("currentCurrency", d.currentCurrency);
+        d.currentDeliveryDays = j.optString("currentDeliveryDays", d.currentDeliveryDays);
+        d.currentClientNeed = j.optString("currentClientNeed", d.currentClientNeed);
+        d.currentHandoffId = j.optString("currentHandoffId", d.currentHandoffId);
         return d;
     }
 }
