@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">ProfilePilot Autofill</string>
+    <string name="autofill_service_description">Fills professional freelancer profile fields after you select ProfilePilot from Android Autofill.</string>
+    <string name="accessibility_service_description">Optional one-time fallback that reviews and fills recognised professional profile fields. It never submits forms or fills sensitive fields.</string>
+</resources>
