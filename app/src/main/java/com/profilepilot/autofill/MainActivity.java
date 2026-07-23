@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Base64;
 import android.view.View;
 import android.view.autofill.AutofillManager;
 import android.widget.ArrayAdapter;
@@ -20,6 +21,9 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -29,12 +33,20 @@ public final class MainActivity extends Activity {
     private SecureProfileStore store;
     private Spinner platform;
     private TextView status;
+    private TextView connectionStatus;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         store = new SecureProfileStore(this);
         setContentView(buildUi());
         loadIntoForm(store.load());
+        handleIntent(getIntent());
+    }
+
+    @Override protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleIntent(intent);
     }
 
     @Override protected void onResume() {
@@ -51,7 +63,7 @@ public final class MainActivity extends Activity {
 
         TextView title = text("ProfilePilot Android Autofill", 25, true, Color.rgb(6, 78, 59));
         root.addView(title);
-        TextView intro = text("Your professional profile is stored encrypted on this phone. ProfilePilot fills recognised profile fields only and never presses Save, Submit, Apply or Publish.", 15, false, Color.DKGRAY);
+        TextView intro = text("Freelance Autopilot can now send a prepared job, proposal and bid directly into this app. ProfilePilot then opens the correct listing and fills recognised application fields.", 15, false, Color.DKGRAY);
         intro.setPadding(0, dp(8), 0, dp(12));
         root.addView(intro);
 
@@ -59,6 +71,14 @@ public final class MainActivity extends Activity {
         status.setPadding(dp(12), dp(10), dp(12), dp(10));
         status.setBackgroundColor(Color.rgb(255, 247, 237));
         root.addView(status, full());
+
+        root.addView(section("Connected application"));
+        connectionStatus = text("No job has been sent from Freelance Autopilot.", 14, true, Color.rgb(75, 85, 99));
+        connectionStatus.setPadding(dp(12), dp(10), dp(12), dp(10));
+        connectionStatus.setBackgroundColor(Color.rgb(248, 250, 252));
+        root.addView(connectionStatus, full());
+        root.addView(button("Open connected job and fill", Color.rgb(6, 78, 59), v -> openConnectedJob()));
+        root.addView(button("Clear connected job", Color.rgb(100, 116, 139), v -> clearConnectedJob()));
 
         root.addView(section("1. Enable phone autofill"));
         root.addView(button("Open Android Autofill settings", Color.rgb(6, 78, 59), v -> openAutofillSettings()));
@@ -83,13 +103,13 @@ public final class MainActivity extends Activity {
         root.addView(button("Save encrypted profile", Color.rgb(6, 78, 59), v -> saveForm()));
         root.addView(button("Review selected platform fields", Color.rgb(180, 83, 9), v -> review()));
         root.addView(button("Arm one-time browser fallback", Color.rgb(30, 64, 175), v -> armFallback()));
-        root.addView(button("Open selected marketplace", Color.rgb(55, 65, 81), v -> openMarketplace()));
+        root.addView(button("Open selected marketplace profile", Color.rgb(55, 65, 81), v -> openMarketplace()));
 
         root.addView(section("Backup"));
         root.addView(button("Copy profile JSON", Color.rgb(75, 85, 99), v -> exportJson()));
         root.addView(button("Import profile JSON from clipboard", Color.rgb(75, 85, 99), v -> importJson()));
 
-        TextView guard = text("Blocked fields: passwords, PINs, verification codes, payment or bank details, tax IDs, identity documents and dates of birth.", 13, true, Color.rgb(153, 27, 27));
+        TextView guard = text("ProfilePilot never presses Save, Submit, Apply or Publish. Passwords, PINs, verification codes, payment details, bank details, identity documents and dates of birth are blocked.", 13, true, Color.rgb(153, 27, 27));
         guard.setPadding(0, dp(14), 0, 0);
         root.addView(guard);
         return scroll;
@@ -120,11 +140,14 @@ public final class MainActivity extends Activity {
         fields.get("Languages").setText(p.languages);
         fields.get("Achievements").setText(p.achievements);
         fields.get("Preferred clients").setText(p.preferredClients);
-        for (int i = 0; i < PLATFORMS.length; i++) if (PLATFORMS[i].equalsIgnoreCase(p.selectedPlatform)) platform.setSelection(i);
+        for (int i = 0; i < PLATFORMS.length; i++) {
+            if (PLATFORMS[i].equalsIgnoreCase(p.selectedPlatform)) platform.setSelection(i);
+        }
+        updateConnectionStatus(p);
     }
 
     private ProfileData formData() {
-        ProfileData p = new ProfileData();
+        ProfileData p = store.load();
         p.fullName = value("Full name");
         p.location = value("Location");
         p.primaryService = value("Primary service");
@@ -146,7 +169,8 @@ public final class MainActivity extends Activity {
         }
         try {
             store.save(p);
-            toast("Profile saved securely on this phone.");
+            updateConnectionStatus(p);
+            toast("Profile and connected application saved securely.");
         } catch (Exception e) {
             toast("Profile could not be encrypted and saved.");
         }
@@ -156,15 +180,129 @@ public final class MainActivity extends Activity {
         ProfileData p = formData();
         Map<FieldMatcher.FieldKey, String> values = p.valuesFor(p.selectedPlatform);
         StringBuilder message = new StringBuilder("Platform: ").append(p.selectedPlatform).append("\n\n");
+        if (p.hasConnectedJob()) {
+            message.append("Connected job: ").append(p.currentJobTitle).append("\n")
+                    .append("Bid: ").append(p.currentCurrency).append(' ').append(p.currentBidAmount).append("\n")
+                    .append("Delivery: ").append(p.currentDeliveryDays).append(" days\n\n");
+        }
         for (Map.Entry<FieldMatcher.FieldKey, String> item : values.entrySet()) {
+            if (item.getValue() == null || item.getValue().trim().isEmpty()) continue;
             message.append(pretty(item.getKey())).append(":\n").append(item.getValue()).append("\n\n");
         }
         new AlertDialog.Builder(this)
                 .setTitle("Review before filling")
                 .setMessage(message.toString())
-                .setPositiveButton("Save profile", (dialog, which) -> saveForm())
+                .setPositiveButton("Save", (dialog, which) -> saveForm())
                 .setNegativeButton("Close", null)
                 .show();
+    }
+
+    private void handleIntent(Intent intent) {
+        Uri data = intent == null ? null : intent.getData();
+        if (data == null || !"profilepilot".equalsIgnoreCase(data.getScheme()) || !"handoff".equalsIgnoreCase(data.getHost())) {
+            updateConnectionStatus(store.load());
+            return;
+        }
+        String payload = data.getQueryParameter("payload");
+        if (payload == null || payload.trim().isEmpty()) {
+            toast("The Freelance Autopilot handoff was empty.");
+            return;
+        }
+        try {
+            byte[] decoded = Base64.decode(payload, Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING);
+            JSONObject job = new JSONObject(new String(decoded, StandardCharsets.UTF_8));
+            ProfileData p = store.load();
+            p.selectedPlatform = supportedPlatform(job.optString("marketplace", p.selectedPlatform));
+            p.currentJobTitle = job.optString("title", "Prepared freelance application");
+            p.currentJobUrl = job.optString("sourceUrl", "");
+            p.currentProposal = job.optString("proposal", "");
+            p.currentBidAmount = valueFrom(job, "offeredPrice");
+            p.currentCurrency = job.optString("currency", "");
+            p.currentClientNeed = job.optString("clientNeed", job.optString("summary", ""));
+            p.currentDeliveryDays = job.optString("deliveryDays", "");
+            if (p.currentDeliveryDays.trim().isEmpty()) {
+                int hours = Math.max(1, job.optInt("estimatedHours", 8));
+                p.currentDeliveryDays = String.valueOf(Math.max(1, (int) Math.ceil(hours / 8.0)));
+            }
+            p.currentHandoffId = job.optString("id", String.valueOf(System.currentTimeMillis()));
+            if (p.currentJobUrl.trim().isEmpty() || p.currentProposal.trim().isEmpty()) {
+                throw new IllegalArgumentException("Missing listing or proposal");
+            }
+            store.save(p);
+            loadIntoForm(p);
+            new AlertDialog.Builder(this)
+                    .setTitle("Application received")
+                    .setMessage(p.currentJobTitle + "\n\nThe proposal, bid and delivery time are now connected to ProfilePilot. Review them, then open the listing and fill the application.")
+                    .setPositiveButton("Open job and fill", (dialog, which) -> openConnectedJob())
+                    .setNegativeButton("Review first", null)
+                    .show();
+        } catch (Exception e) {
+            toast("This Freelance Autopilot application package could not be opened.");
+        }
+    }
+
+    private String valueFrom(JSONObject object, String key) {
+        Object value = object.opt(key);
+        if (value == null || value == JSONObject.NULL) return "";
+        if (value instanceof Number) {
+            double number = ((Number) value).doubleValue();
+            if (number == Math.rint(number)) return String.valueOf((long) number);
+        }
+        return String.valueOf(value);
+    }
+
+    private String supportedPlatform(String value) {
+        for (String supported : PLATFORMS) if (supported.equalsIgnoreCase(value)) return supported;
+        return "Freelancer";
+    }
+
+    private void openConnectedJob() {
+        ProfileData p = formData();
+        if (!p.hasConnectedJob()) {
+            toast("Send a prepared job from Freelance Autopilot first.");
+            return;
+        }
+        try {
+            store.save(p);
+            store.setAccessibilityArmed(true);
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(p.currentJobUrl)));
+        } catch (Exception e) {
+            toast("The connected job could not be opened.");
+        }
+    }
+
+    private void clearConnectedJob() {
+        try {
+            ProfileData p = formData();
+            p.currentJobTitle = "";
+            p.currentJobUrl = "";
+            p.currentProposal = "";
+            p.currentBidAmount = "";
+            p.currentCurrency = "";
+            p.currentDeliveryDays = "";
+            p.currentClientNeed = "";
+            p.currentHandoffId = "";
+            store.setAccessibilityArmed(false);
+            store.save(p);
+            updateConnectionStatus(p);
+            toast("Connected application cleared.");
+        } catch (Exception e) {
+            toast("Connected application could not be cleared.");
+        }
+    }
+
+    private void updateConnectionStatus(ProfileData p) {
+        if (connectionStatus == null) return;
+        if (p.hasConnectedJob()) {
+            String bid = p.currentBidAmount.trim().isEmpty() ? "price not stated" : (p.currentCurrency + " " + p.currentBidAmount).trim();
+            connectionStatus.setText("✓ Connected from Freelance Autopilot\n" + p.currentJobTitle + "\n" + p.selectedPlatform + " • " + bid + " • " + p.currentDeliveryDays + " day delivery");
+            connectionStatus.setTextColor(Color.rgb(6, 78, 59));
+            connectionStatus.setBackgroundColor(Color.rgb(236, 253, 245));
+        } else {
+            connectionStatus.setText("No job has been sent from Freelance Autopilot.");
+            connectionStatus.setTextColor(Color.rgb(75, 85, 99));
+            connectionStatus.setBackgroundColor(Color.rgb(248, 250, 252));
+        }
     }
 
     private void armFallback() {
@@ -172,7 +310,7 @@ public final class MainActivity extends Activity {
         store.setAccessibilityArmed(true);
         new AlertDialog.Builder(this)
                 .setTitle("One-time fallback armed")
-                .setMessage("Open the marketplace profile form. ProfilePilot will scan the current screen once, show the recognised fields, and wait for you to press Fill. It will not submit the form.")
+                .setMessage("Open a marketplace form. ProfilePilot will scan the current screen once, show the recognised fields and wait for you to press Fill. It will not submit the form.")
                 .setPositiveButton("Open marketplace", (d, w) -> openMarketplace())
                 .setNegativeButton("Cancel", (d, w) -> store.setAccessibilityArmed(false))
                 .show();
@@ -226,8 +364,9 @@ public final class MainActivity extends Activity {
         AutofillManager manager = getSystemService(AutofillManager.class);
         boolean autofill = manager != null && manager.hasEnabledAutofillServices();
         status.setText((autofill ? "✓ Android Autofill is enabled" : "Android Autofill is not enabled") +
-                "\nAccessibility fallback: " + (store.isAccessibilityArmed() ? "armed for one screen" : "not armed"));
+                "\nAccessibility fallback: " + (store.isAccessibilityArmed() ? "armed for the next screen" : "not armed"));
         status.setTextColor(autofill ? Color.rgb(6, 78, 59) : Color.rgb(146, 64, 14));
+        updateConnectionStatus(store.load());
     }
 
     private String value(String label) { return fields.get(label).getText().toString().trim(); }
