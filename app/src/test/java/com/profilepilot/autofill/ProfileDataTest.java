@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -26,5 +27,19 @@ public class ProfileDataTest {
             assertFalse(values.get(FieldMatcher.FieldKey.SERVICE_DESCRIPTION).trim().isEmpty());
             assertFalse(values.get(FieldMatcher.FieldKey.PORTFOLIO_DESCRIPTION).trim().isEmpty());
         }
+    }
+
+    @Test public void connectedApplicationValuesAreAvailableToAutofill() throws Exception {
+        ProfileData profile = ProfileData.defaults();
+        profile.currentJobUrl = "https://example.com/job/1";
+        profile.currentProposal = "Prepared proposal";
+        profile.currentBidAmount = "120";
+        profile.currentDeliveryDays = "3";
+        ProfileData restored = ProfileData.fromJson(profile.toJson().toString());
+        Map<FieldMatcher.FieldKey, String> values = restored.valuesFor("Freelancer");
+        assertTrue(restored.hasConnectedJob());
+        assertEquals("Prepared proposal", values.get(FieldMatcher.FieldKey.PROPOSAL));
+        assertEquals("120", values.get(FieldMatcher.FieldKey.BID_AMOUNT));
+        assertEquals("3", values.get(FieldMatcher.FieldKey.DELIVERY_DAYS));
     }
 }
