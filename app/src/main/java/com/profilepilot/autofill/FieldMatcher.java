@@ -8,7 +8,8 @@ public final class FieldMatcher {
     public enum FieldKey {
         FULL_NAME, LOCATION, HEADLINE, SUMMARY, SKILLS, TOOLS, LANGUAGES,
         EXPERIENCE, ACHIEVEMENTS, PREFERRED_CLIENTS, SERVICE_TITLE,
-        SERVICE_DESCRIPTION, PORTFOLIO_TITLE, PORTFOLIO_DESCRIPTION
+        SERVICE_DESCRIPTION, PORTFOLIO_TITLE, PORTFOLIO_DESCRIPTION,
+        PROPOSAL, BID_AMOUNT, DELIVERY_DAYS
     }
 
     private static final String[] SENSITIVE = {
@@ -21,6 +22,9 @@ public final class FieldMatcher {
 
     private static final LinkedHashMap<FieldKey, String[]> RULES = new LinkedHashMap<>();
     static {
+        RULES.put(FieldKey.PROPOSAL, new String[]{"cover letter", "your proposal", "proposal details", "proposal description", "application message", "message to client", "describe your proposal", "why are you the best", "why should we hire you", "bid description"});
+        RULES.put(FieldKey.BID_AMOUNT, new String[]{"bid amount", "your bid", "proposed price", "fixed price", "project amount", "hourly rate", "your rate", "offer amount"});
+        RULES.put(FieldKey.DELIVERY_DAYS, new String[]{"delivery days", "days to deliver", "delivery time", "project duration", "duration in days", "complete in", "estimated duration"});
         RULES.put(FieldKey.PORTFOLIO_DESCRIPTION, new String[]{"portfolio description", "project description", "case study description"});
         RULES.put(FieldKey.PORTFOLIO_TITLE, new String[]{"portfolio title", "project title", "case study title"});
         RULES.put(FieldKey.SERVICE_DESCRIPTION, new String[]{"service description", "gig description", "project catalog description", "what you offer"});
