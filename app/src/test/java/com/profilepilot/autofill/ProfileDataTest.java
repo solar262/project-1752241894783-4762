@@ -18,6 +18,15 @@ public class ProfileDataTest {
         assertFalse(profile.achievements.trim().isEmpty());
     }
 
+    @Test public void synchronizationRequiresAllSecureConnectionFields() {
+        ProfileData profile = ProfileData.defaults();
+        assertFalse(profile.hasSync());
+        profile.currentSyncId = "sync-1";
+        profile.currentSyncToken = "token-1";
+        profile.currentSyncBaseUrl = "https://example.test";
+        assertTrue(profile.hasSync());
+    }
+
     @Test public void everyPlatformHasTransferReadyContent() {
         ProfileData profile = ProfileData.defaults();
         for (String platform : new String[]{"Freelancer", "Upwork", "Fiverr", "LinkedIn"}) {
