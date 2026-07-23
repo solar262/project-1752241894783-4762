@@ -27,6 +27,12 @@ public class FieldMatcherTest {
         assertNull(FieldMatcher.match("Password"));
     }
 
+    @Test public void recognisesSubmissionActionsWithoutMatchingOrdinaryButtons() {
+        assertTrue(FieldMatcher.isSubmissionAction("Submit proposal"));
+        assertTrue(FieldMatcher.isSubmissionAction("Place Bid now"));
+        assertTrue(!FieldMatcher.isSubmissionAction("Open project details"));
+    }
+
     @Test public void detectsTargetPlatforms() {
         assertEquals("Freelancer", FieldMatcher.detectPlatform("com.android.chrome", "www.freelancer.com", "Upwork"));
         assertEquals("LinkedIn", FieldMatcher.detectPlatform("com.linkedin.android", "", "Freelancer"));
