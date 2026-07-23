@@ -25,6 +25,12 @@ public final class ProfileData {
     public String currentDeliveryDays;
     public String currentClientNeed;
     public String currentHandoffId;
+    public String currentSyncId;
+    public String currentSyncToken;
+    public String currentSyncBaseUrl;
+    public String currentSyncStatus;
+    public String currentSyncDetail;
+    public long currentSyncUpdatedAt;
 
     public static ProfileData defaults() {
         ProfileData p = new ProfileData();
@@ -46,6 +52,12 @@ public final class ProfileData {
         p.currentDeliveryDays = "";
         p.currentClientNeed = "";
         p.currentHandoffId = "";
+        p.currentSyncId = "";
+        p.currentSyncToken = "";
+        p.currentSyncBaseUrl = "";
+        p.currentSyncStatus = "";
+        p.currentSyncDetail = "";
+        p.currentSyncUpdatedAt = 0L;
         return p;
     }
 
@@ -74,6 +86,12 @@ public final class ProfileData {
 
     public boolean hasConnectedJob() {
         return currentJobUrl != null && !currentJobUrl.trim().isEmpty() && currentProposal != null && !currentProposal.trim().isEmpty();
+    }
+
+    public boolean hasSync() {
+        return currentSyncId != null && !currentSyncId.trim().isEmpty()
+                && currentSyncToken != null && !currentSyncToken.trim().isEmpty()
+                && currentSyncBaseUrl != null && currentSyncBaseUrl.startsWith("https://");
     }
 
     private String headline(String platform) {
@@ -110,6 +128,9 @@ public final class ProfileData {
         j.put("currentProposal", currentProposal); j.put("currentBidAmount", currentBidAmount);
         j.put("currentCurrency", currentCurrency); j.put("currentDeliveryDays", currentDeliveryDays);
         j.put("currentClientNeed", currentClientNeed); j.put("currentHandoffId", currentHandoffId);
+        j.put("currentSyncId", currentSyncId); j.put("currentSyncToken", currentSyncToken);
+        j.put("currentSyncBaseUrl", currentSyncBaseUrl); j.put("currentSyncStatus", currentSyncStatus);
+        j.put("currentSyncDetail", currentSyncDetail); j.put("currentSyncUpdatedAt", currentSyncUpdatedAt);
         return j;
     }
 
@@ -134,6 +155,12 @@ public final class ProfileData {
         d.currentDeliveryDays = j.optString("currentDeliveryDays", d.currentDeliveryDays);
         d.currentClientNeed = j.optString("currentClientNeed", d.currentClientNeed);
         d.currentHandoffId = j.optString("currentHandoffId", d.currentHandoffId);
+        d.currentSyncId = j.optString("currentSyncId", d.currentSyncId);
+        d.currentSyncToken = j.optString("currentSyncToken", d.currentSyncToken);
+        d.currentSyncBaseUrl = j.optString("currentSyncBaseUrl", d.currentSyncBaseUrl);
+        d.currentSyncStatus = j.optString("currentSyncStatus", d.currentSyncStatus);
+        d.currentSyncDetail = j.optString("currentSyncDetail", d.currentSyncDetail);
+        d.currentSyncUpdatedAt = j.optLong("currentSyncUpdatedAt", d.currentSyncUpdatedAt);
         return d;
     }
 }
