@@ -184,7 +184,7 @@ public final class MainActivity extends Activity {
             intent.setData(Uri.parse("package:" + getPackageName()));
             startActivity(intent);
         } catch (Exception e) {
-            startActivity(new Intent(Settings.ACTION_AUTOFILL_SETTINGS));
+            startActivity(new Intent(Settings.ACTION_SETTINGS));
         }
     }
 
